@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!--Import Google Icon Font-->
+		<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<!--Import materialize.css-->
+		<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css" media="screen,projection" />
+
+		<!--Let browser know website is optimized for mobile-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+		<meta charset="utf-8"/>
+		<title>Caliper</title>
+	</head>
+
+	<body>
+		<header>
+			<div class="awTitle">Caliper</div>
+		</header>
+		<div class="container" id="events">
+			<div class = "row">
+				<div class = "col s12">
+					<ul class = "tabs">
+						<li class = "tab col s4"><a class = "active" href = "#measures">Measures</a></li>
+						<li class = "tab col s4"><a href = "#status">Status</a></li>
+						<li class = "tab col s4 "><a href = "#config">Config</a></li>
+					</ul>
+				</div>
+         
+				<div id = "measures" class = "tab col s12">
+					<div id = "measuresTable" class = "tab col s12"></div>
+					<div>
+						<datalist id ="filelist"></datalist>
+						<input id="filename" list="filelist" style="width:200px;height:24px">
+					</div>
+					<a class="btn green" id="savemeasures" style="width:80px;height:24px">Save</a>&nbsp 
+					<a class="btn green" id="loadmeasures" style="width:80px;height:24px">Load</a>
+				</div>
+				<div id = "status" class = "tab col s12"></div>
+				<div id = "config" class = "tab col s12">
+					<div id = "configTable" class = "tab col s12"></div>
+					<a class="btn green" id="saveconfig" style="width:80px;height:24px">Save</a
+				</div>
+			</div> 
+		</div>
+		<style type="text/css">
+			.btn_grid {
+				margin: 3px 0;
+			}
+			.btn {
+				height: 28px;
+				line-height: 28px;
+			}
+			.awTitle {
+				display:inline-block;
+				font-size: x-large;
+				padding-left:20px;
+				width:200px;
+			}
+			header {
+				position:absolute;
+				top:0px;
+				left:0px;
+				height:32px;
+				right:0px;
+				overflow:hidden;
+				background:red;
+				color:white;
+			}
+			td {
+				height:20px;
+				width:200px;
+				padding:0px;
+			}
+			.container {
+				position:absolute;
+				top:32px;
+				bottom:0px;
+				left:10px;
+				right:60px;
+				overflow-y:auto;
+				overflow-x:hidden;
+			}
+			.tab {
+				overflow-x:hidden;
+			}
+		</style>
+	
+		<!--Import jQuery before materialize.js-->
+		<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/js/materialize.min.js"></script>
+		<script type="text/javascript">(function($){
+$(function(){
+	var host = window.location.hostname;
+	var configTitles = 'Parameter,Value';
+	var measureTitles = 'Name,Value';
+	var statusTitles = 'Parameter,Value';
+	var mCount;
+	var cCount;
+	var measureCount = 0;
+	var measureIndex = -1;
+	var measuredIndex = 0;
+	var measuredValue = 0;
+	var measureFile = "";
+	var measureFilePrefix;
+	var measureFileList;
+	var lastStatus = '';
+	
+	// ******************************************************************
+	// init()
+	// ******************************************************************
+	function init() {
+		getFileList();
+		loadConfigTable();
+		loadStatus();
+	}
+
+		
+	function getFileList() {
+		$.get("http://" + host + "/getmeasurefiles", function(data) {
+			measureFileList = data.split("<BR>");
+		});
+	}
+	
+	function loadFileList() {
+		var selectEl = $('#filelist');
+		if(selectEl) {
+			selectEl.empty();
+			var list = '';
+			var selected;
+			for (var j = 0; j < (measureFileList.length - 1); j++){
+				if(measureFileList[j] == measureFile)
+					selected = ' selected ';
+				else
+					selected = '';
+				list += '<option value="' + measureFileList[j] + '"></option>';
+			}
+			selectEl.html(list);
+		}
+	}
+	
+	function loadMeasuresTable() {
+		// Load measures Table
+		$.get("http://" + host + "/loadmeasures?filename=" + measureFile, function(data) {
+			var lines = data.split("<BR>");
+			var measuresTable_html = '<table id="measures"><thead><tr>';
+			var measureFields = [];
+			var measureEl;
+			var measureName;
+			var i;
+			
+			measureFields = measureTitles.split(",");
+			for(i=0; i < measureFields.length; i++) measuresTable_html += '<th>' + measureFields[i] + '</th>';
+			measuresTable_html += '</thead></tr><tbody>';
+			mCount=0;
+			$.each(lines, function(n, urlRecord) {
+				if(urlRecord.length > 0 && urlRecord.charAt(0) != '#') {
+					measureFields = urlRecord.split(":");
+					measureEl = document.getElementById('mName_' + mCount);
+					if(measureEl)
+						measureName = measureEl.value;
+					else
+						measureName = measureFields[0];
+					measuresTable_html += '<tr>'; 
+					measuresTable_html += '<td><input id="mName_' + mCount + '" style="width:200px;height:16px" value="' + measureName + '" type="text"></td>'; 
+					measuresTable_html += '<td><input readonly id="mValue_' + mCount + '" style="width:200px;height:16px" value="' + measureFields[1] + '" type="text"></td>'; 
+					measuresTable_html += '</tr>';
+					mCount++;
+				}
+			});
+			measuresTable_html += '<tr>';
+			measuresTable_html += '</tr></table>';
+			$('#measuresTable').html(measuresTable_html);
+		});
+	}
+	
+	function loadConfigTable() {
+		// Load config
+		$.get("http://" + host + "/loadconfig", function(data) {
+			var lines = data.split("<BR>");
+			var configTable_html = '<table id="configValues"><thead><tr>';
+			var i;
+			var configFields = [];
+			configFields = configTitles.split(",");
+			for(i=0; i< 2; i++) configTable_html += '<th>' + configFields[i] + '</th>';
+			configTable_html += '</thead></tr><tbody>';
+
+			cCount = 0;
+			$.each(lines, function(n, urlRecord) {
+				if(urlRecord.length > 0 && urlRecord.charAt(0) != '#') {
+					configFields = urlRecord.split(':');
+					configTable_html += '<tr>'; 
+					configTable_html += '<td><input readonly id="cName_' + cCount + '" style="width:200px;height:16px" value="' + configFields[0] + '" type="text"></td>'; 
+					configTable_html += '<td><input id="cValue_' + cCount + '" style="width:200px;height:16px" value="' + configFields[1] + '" type="text"></td>'; 
+					configTable_html += '</tr>';
+					cCount++;
+				}
+			});
+			configTable_html += '</table>';
+			$('#configTable').html(configTable_html);
+		});
+	}
+
+	function loadStatus() {
+		$.get("http://" + host + "/status",  function(data) {
+			if(data != lastStatus) {
+				lastStatus = data;
+				var lines = data.split("<BR>");
+				var status_html = '<table><thead><tr>';
+				var i;
+				var statusFields = [];
+				var key;
+				var measureEl;
+				
+				statusFields = statusTitles.split(",");
+				for(i=0; i< 2; i++) status_html += '<th>' + statusFields[i] + '</th>';
+				status_html += '</thead></tr><tbody>';
+
+				$.each(lines, function(n, urlRecord) {
+					if(urlRecord.length > 0 && urlRecord.charAt(0) != '#') {
+						statusFields = urlRecord.split(':');
+						key = statusFields[0];
+						if(statusFields[1] != '') {
+							status_html += '<tr>'; 
+							status_html += '<td>' + key + '</td>';
+							status_html += '<td>' + statusFields[1] + '</td>'; 
+							status_html += '</tr>';
+							switch (key) {
+								case 'MeasureFilePrefix' :
+									measureFilePrefix = statusFields[1];
+									break;
+								case 'MeasuredIndex' :
+									measuredIndex = statusFields[1];
+									break;
+								case 'MeasuredValue' :
+									measuredValue = statusFields[1];
+									break;
+								case 'MeasureIndex' :
+									if(measureIndex != statusFields[1]) {
+										if(measureIndex >=0) {
+											var measureEl = document.getElementById('mValue_' + measureIndex);
+											if(measureEl) {
+												measureEl.style.backgroundColor="White";
+											}
+										}
+										measureIndex = statusFields[1];
+										var measureEl = document.getElementById('mValue_' + measureIndex);
+										if(measureEl) {
+											measureEl.style.backgroundColor="PaleGreen";
+										}
+									}
+									break;
+								case 'MeasureFile' :
+									if(statusFields[1] != measureFile) {
+										measureFile = statusFields[1];
+										loadMeasuresTable();
+										loadFileList();
+									}
+									break;
+								case 'MeasureCount' :
+									if(statusFields[1] != measureCount) {
+										measureEl = document.getElementById('mValue_' + measuredIndex);
+										if(measureEl) measureEl.value=measuredValue;
+										measureCount = statusFields[1];
+									}
+									break;
+							}
+						}
+					}
+				});
+				status_html += '</table>';
+				$('#status').html(status_html);
+			}
+		});
+		var measureEl = document.getElementById('mValue_' + measureIndex);
+		if(measureEl) measureEl.style.backgroundColor="PaleGreen";
+	}
+	
+	// ******************************************************************
+	// Actions
+	// ******************************************************************	
+	$("#config").on("click", "#saveconfig", function() {
+		var config;
+		var btn = $(this);
+		saveConfig(config);
+	});
+	
+	function saveConfig(config) {
+		var config = '#';
+		var i;
+		for (var r = 0; r < cCount; r++) {
+            config += document.getElementById('cName_' + r).value + ',';
+        }
+
+		for (var r = 0; r < cCount; r++) {
+            config += '<BR>' + document.getElementById('cValue_' + r).value;
+        }
+		$.get("http://" + host + "/saveconfig", {'config':config} );
+	}
+	
+	$("#measures").on("click", "#savemeasures", function() {
+		var btn = $(this);
+		saveMeasures();
+	});
+	
+	function saveMeasures() {
+		var measures = "";
+		var i;
+		var filename = document.getElementById('filename').value;
+		if(filename.length) {
+			if(filename.indexOf(measureFilePrefix) != 0) filename = measureFilePrefix + filename;
+			if(filename.indexOf(".") < 0) filename += ".txt";
+			for (var r = 0; r < mCount; r++) {
+				measures += document.getElementById('mName_' + r).value + ':' + document.getElementById('mValue_' + r).value + '<BR>';
+			}
+			$.get("http://" + host + "/savemeasures", {'auth':14153143,'filename':filename,'measures':measures});
+			getFileList();
+			loadFileList();
+		}
+	}
+	
+	$("#measures").on("click", "#loadmeasures", function() {
+		var btn = $(this);
+		loadMeasures();
+	});
+	
+	function loadMeasures() {
+		var filename = document.getElementById('filename').value;
+		if(filename.length) {
+			if(filename.indexOf("measures") != 0) filename = "measures" + filename;
+			if(filename.indexOf(".") < 0) filename += ".txt";
+			measureFile = filename;
+			loadMeasuresTable();
+		}
+	}
+	
+	function refresh(updateRate) {
+	   setInterval(function(){ loadStatus(); }, updateRate);
+	}
+	
+	// ******************************************************************
+	// main
+	// ******************************************************************
+	init();
+	refresh(1000);
+	
+}); // end of document ready
+})(jQuery); // end of jQuery name space</script>
+	</body>
+</html>

@@ -1,0 +1,12 @@
+#Config file for caliper
+# lines are host;noChangeTimeout;enableSleep;main loop delay;battery cal;buttonShort;buttonMedium;buttonLong;measureFile;measureFilePrefix
+caliper
+60000
+1
+200
+0.976
+100
+2000
+4000
+measuresDefault.txt
+measures
