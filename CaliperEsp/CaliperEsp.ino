@@ -260,11 +260,11 @@ String getConfig() {
 		Serial.print(F("enableSleep:"));Serial.println(enableSleep);
 		Serial.print(F("timeInterval:"));Serial.println(timeInterval);
 		Serial.print(F("adcCal:"));Serial.println(adcCal);
-		Serial.print(F("buttonShort:"));Serial.println(adcCal);
-		Serial.print(F("buttonMedium:"));Serial.println(adcCal);
-		Serial.print(F("buttonLong:"));Serial.println(adcCal);
-		Serial.print(F("measureFileName:"));Serial.println(adcCal);
-		Serial.print(F("measureFilenamePrefix:"));Serial.println(adcCal);
+		Serial.print(F("buttonShort:"));Serial.println(buttonShort);
+		Serial.print(F("buttonMedium:"));Serial.println(buttonMedium);
+		Serial.print(F("buttonLong:"));Serial.println(buttonLong);
+		Serial.print(F("measureFileName:"));Serial.println(measureFileName);
+		Serial.print(F("measureFilenamePrefix:"));Serial.println(measureFilenamePrefix);
 	} else {
 		Serial.println(String(CONFIG_FILE) + " not found. Use default encoder");
 	}
