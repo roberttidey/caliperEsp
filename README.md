@@ -7,6 +7,7 @@ It makes use of the BaseSupport library at
 https://github.com/roberttidey/BaseSupport
 
 Edit the WifiManager and update passwords in BaseConfig.h
+Uncomment FASTCONNECT in BaseConfig.h as required
 
 ## Features
 - Add on to back of digital calipers to make series of measurements available over wifi
