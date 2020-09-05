@@ -2,6 +2,11 @@
 Wifi / Web server add on to digital calipers
 
 Construction details to be posted at https://www.instructables.com/id/Wifi-Calipers
+It makes use of the BaseSupport library at
+
+https://github.com/roberttidey/BaseSupport
+
+Edit the WifiManager and update passwords in BaseConfig.h
 
 ## Features
 - Add on to back of digital calipers to make series of measurements available over wifi
