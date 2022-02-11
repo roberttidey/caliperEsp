@@ -14,7 +14,6 @@
 #define TEST 0
 #define ESP8266
 #include "BaseConfig.h"
-#include <ESP8266HTTPClient.h>
 
 #define CALIPER_CLOCK 13
 #define CALIPER_DATA 14
@@ -80,8 +79,6 @@ int measuredValue = 0;
 
 //For update service
 String configNames[] = {"host","noChangeTimeout","enableSleep","timeInterval","adcCal","buttonShort","buttonMedium","buttonLong","measureFileName","measureFileNamePrefix"};
-
-HTTPClient cClient;
 
 /*
   Caliper clock interrupt handler
